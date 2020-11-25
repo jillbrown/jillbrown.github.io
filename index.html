@@ -63,7 +63,7 @@
 						.attr("align", "center");
 
 			//Load in covid data
-			d3.csv("/vizchallenge/covidfoodinsecurity.csv?t=${Date.now()}").then(function(data) {
+			d3.csv("/covidfoodinsecurity.csv?t=${Date.now()}").then(function(data) {
 								
 				const margin = { top: 50, right: 40, bottom: 77, left: 180 };
 				const innerWidth = w - margin.left - margin.right;
