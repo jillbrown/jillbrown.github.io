@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>COVID Food Insecurity Ratings</title>
+		<script src="https://unpkg.com/d3@6.2.0/dist/d3.min.js"></script>
+		<script src="https://d3js.org/d3-color.v2.min.js"></script>
+		<script src="https://d3js.org/d3-interpolate.v2.min.js"></script>
+		<script src="https://d3js.org/d3-scale-chromatic.v2.min.js"></script>
+		<script src="https://d3js.org/colorbrewer.v1.min.js"></script>
+		<script src="/html5slider.js"></script>
+		<link rel="stylesheet" href="/style.css">
+	</head>
+	<body>
+		<h1>Twelve Weeks of COVID Food Insecurity</h1>
+		<h2>Weekly ratings from April 23 through July 21, 2020.</h2>
+		
+		<p>During COVID, the U.S. Census Bureau has distributed a weekly <i>Household Pulse Survey</i> to understand 
+		challenges American Families may be experiencing.  The map displayed here shows the percent of respondents in each state who indicated
+		their <b>household sometimes or often did not have enough to eat</b>.</p>
+	
+		<p>Select week using slider.</p>
+		<input id="slider" type="range" min="1" max="12" value="1" step="1"/>
+		<span id="range">1</span>
+		
+		<script type="text/javascript">
+		onload = function() {
+			var $ = function(id) { 
+				return document.getElementById(id); 
+				};
+			$('slider').oninput = function() { 
+				$('range').innerHTML = this.value; 
+				};
+			$('slider').oninput();
+		};
+		</script>
+		<p></p>
+		<script type="text/javascript">
+						
+			//Width and height
+			var w = 500;
+			var h = 300;
+
+			//Define scale to sort data values into buckets of color. Will need to figure out how to set input domain with min and max.
+			var color = d3.scaleLinear()
+						  .domain([0, 15])
+						  .range(["#F7FBFF", "#08306B"]);
+
+			//Define map projection
+			var projection = d3.geoAlbersUsa()
+								.translate([w/2, h/2])
+								.scale([600]);
+
+			//Define path generator
+			var path = d3.geoPath()
+						 .projection(projection);
+							 
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+						.attr("align", "center");
+
+			//Load in covid data
+			d3.csv("/vizchallenge/covidfoodinsecurity.csv?t=${Date.now()}").then(function(data) {
+								
+				const margin = { top: 50, right: 40, bottom: 77, left: 180 };
+				const innerWidth = w - margin.left - margin.right;
+				const innerHeight = h - margin.top - margin.bottom;
+				
+				//Load in GeoJSON data
+				d3.json("/us-states.json").then(function(json) {
+
+					//Merge the covid data and GeoJSON
+					//Loop through once for each covid data value
+					for (var i = 0; i < data.length; i++) {
+				
+						//Grab state name
+						var dataState = data[i].State;
+				
+						//Find the corresponding state inside the GeoJSON
+						for (var j = 0; j < json.features.length; j++) {
+						
+							var jsonState = json.features[j].properties.name;
+				
+							if (dataState == jsonState) {
+						
+								//Copy the data value into the JSON
+								json.features[j].properties.value1 = parseFloat(data[i].insecurity1);
+								json.features[j].properties.value2 = parseFloat(data[i].insecurity2);
+								json.features[j].properties.value3 = parseFloat(data[i].insecurity3);
+								json.features[j].properties.value4 = parseFloat(data[i].insecurity4);
+								json.features[j].properties.value5 = parseFloat(data[i].insecurity5);
+								json.features[j].properties.value6 = parseFloat(data[i].insecurity6);
+								json.features[j].properties.value7 = parseFloat(data[i].insecurity7);
+								json.features[j].properties.value8 = parseFloat(data[i].insecurity8);
+								json.features[j].properties.value9 = parseFloat(data[i].insecurity9);
+								json.features[j].properties.value10 = parseFloat(data[i].insecurity10);
+								json.features[j].properties.value11 = parseFloat(data[i].insecurity11);
+								json.features[j].properties.value12 = parseFloat(data[i].insecurity12);
+																
+								//Stop looking through the JSON
+								break;
+								
+							}
+						}		
+					} 
+					
+					//Bind data and create one path per GeoJSON feature
+					svg.selectAll("path")
+					   .data(json.features)
+					   .enter()
+					   .append("path")
+					   .attr("d", path)
+					   .attr("class", "state")
+					   .attr("fill", function(d,value) {
+					   		//Get data value
+					   		var value = d.properties.value1;
+														
+					   		if (value) {
+					   			//If value exists…
+						   		return color(value);
+								
+					   		} else {
+					   			//If value is undefined…
+						   		return "#ccc";
+					   		}
+					   });
+
+					})
+
+					
+					d3.selectAll("input").on("change", function change() {
+						var value = this.value;
+
+						d3.selectAll("path").style("fill", function(d) {
+							switch (value) {
+								case "1":
+									return color(d.properties.value1);
+									break;
+								case "2":
+									return color(d.properties.value2);
+									break;
+								case "3":
+									return color(d.properties.value3);
+									break;
+								case "4":
+									return color(d.properties.value4);
+									break;
+								case "5":
+									return color(d.properties.value5);
+									break;
+								case "6":
+									return color(d.properties.value6);
+									break;
+								case "7":
+									return color(d.properties.value7);
+									break;
+								case "8":
+									return color(d.properties.value8);
+									break;
+								case "9":
+									return color(d.properties.value9);
+									break;
+								case "10":
+									return color(d.properties.value10);
+									break;
+								case "11":
+									return color(d.properties.value11);
+									break;
+								case "12":
+									return color(d.properties.value12);
+									break;
+							}
+						});
+					});
+					
+										
+					//Adding legend for our Choropleth
+					var lw = 100, lh = 300;
+
+					var key = d3.select("body")
+						.append("svg")
+						.attr("id", "key")
+						.attr("width", lw)
+						.attr("height", lh);
+
+					var legend = key.append("defs")
+						.append("svg:linearGradient")
+						.attr("id", "gradient")
+						.attr("x1", "100%")
+						.attr("y1", "0%")
+						.attr("x2", "100%")
+						.attr("y2", "100%")
+						.attr("spreadMethod", "pad");
+
+					legend.append("stop")
+						.attr("offset", "0%")
+						.attr("stop-color", "#08306B")
+						.attr("stop-opacity", 1);
+
+					legend.append("stop")
+						.attr("offset", "100%")
+						.attr("stop-color", "#F7FBFF")
+						.attr("stop-opacity", 1);
+
+					key.append("rect")
+						.attr("width", 20)
+						.attr("height", 100)
+						.style("fill", "url(#gradient)")
+						.attr("transform", "translate(20,10)");
+
+					var y = d3.scaleLinear()
+						.domain([0, 15])
+						.range([100, 0]);
+
+					var yAxis = d3.axisRight()
+						.scale(y);
+
+					key.append("g")
+						.attr("class", "y axis")
+						.attr("transform", "translate(42,10)")
+						.call(yAxis)
+						.append("text")
+							.attr("transform", "rotate(-90)")
+							.attr("y", -35)
+							.attr("dy", ".71em")
+							.attr("fill", "black")
+							.style("text-anchor", "end")
+							.text("Percent of Households without Adequate Food");
+					//end legend
+
+					
+				});
+
+		</script>
+	</body>
+</html>
